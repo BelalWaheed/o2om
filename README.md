@@ -1,130 +1,167 @@
 # O2om (قُوم) — Stand-Up & Physical Health Reminder
 
-> **v0.6.1 (Release 1)** — A lightweight, customizable stand-up and physical health reminder utility for Windows built with AutoHotkey v2.
+> **O2om** — A lightweight, modern, localized desktop health utility for Windows built with AutoHotkey v2.
 
 ---
 
-## Overview
+## Download O2om
 
-**O2om** (derived from the Arabic word **قُوم**, meaning *"Stand up!"*) helps remote workers, software engineers, and computer users maintain physical health by prompting periodic movement, standing breaks, and stretching.
+[**⬇️ Download Latest Executable (`O2om.exe`)**](O2om.exe)
 
-It runs quietly in the system tray, monitors physical input (keyboard/mouse) to auto-pause when you step away, handles system sleep/wake cycles gracefully, and escalates reminders in stages.
-
----
-
-## Features in Release 1 (v0.6.1)
-
-- **Smart Countdown Timer**: Default 40-minute work interval counting down to your next break.
-- **Idle & Sleep Awareness**: Automatically pauses when you leave your PC and handles sleep/hibernate without firing stale notifications.
-- **3-Stage Escalation System**:
-  1. *First Warning*: Friendly reminder with chime to stand up and stretch.
-  2. *Final Warning*: Follow-up alert if you missed the first reminder.
-  3. *Auto-Reset*: Final audio alert before resetting the timer automatically.
-- **Snooze & Reset**: Postpone your break by 5 minutes or reset the timer manually at any time.
-- **Windows Auto-Start**: Easily toggle starting O2om automatically with Windows.
-- **Sleek Dark GUI**: Modern Segoe UI interface with Dashboard and Settings tabs.
-- **System Tray Integration**: Dynamic tray icon tooltip showing time remaining and a context menu for quick control.
+_No installation required! Download `O2om.exe`, double-click to run, and it will sit quietly in your System Tray._
 
 ---
 
-## How to Run & Use O2om
+## Quick User Guide
 
-### Option 1: Running the Pre-compiled Executable (`O2om.exe`)
-1. Download or locate `O2om.exe`.
-2. Double-click `O2om.exe` to launch.
-3. The app starts minimized in your **System Tray** (near the Windows clock).
-4. **Left-click** or right-click the tray icon and select **Show Dashboard** to open the main window.
+### What is O2om?
 
-### Option 2: Running from Source (`O2om.ahk`)
-#### Prerequisites
-- Windows OS
-- [AutoHotkey v2.0+](https://www.autohotkey.com/) installed on your machine.
-
-#### Running the Script
-1. Install AutoHotkey v2 if you haven't already.
-2. Double-click `O2om.ahk` or right-click `O2om.ahk` and select **Run Script**.
+**O2om** (from the Arabic word **قُوم**, meaning _"Stand up!"_) helps software developers, gamers, remote workers, and desk users maintain physical health, prevent eye strain, and fix sedentary posture.
 
 ---
 
-## Customization & Settings
+### Key Usage Steps
 
-O2om allows full customization through the GUI or directly via the `o2om_config.ini` file.
-
-### Via the GUI (Recommended)
-1. Open O2om Dashboard from the System Tray.
-2. Click on the **Settings** tab.
-3. Adjust the intervals:
-   - **Work Interval (min)**: Duration between break reminders (default: `40`).
-   - **Warning Interval (min)**: Gap between escalation alerts (default: `2`).
-   - **Snooze Duration (min)**: Duration when hitting Snooze (default: `5`).
-   - **Idle Threshold (min)**: Inactivity duration before auto-pausing (default: `5`).
-4. Click **Save Settings**.
-
-### Via `o2om_config.ini` File
-When O2om runs, it automatically creates an `o2om_config.ini` file in the same directory:
-
-```ini
-[Timer]
-WorkInterval=40
-EscalationInterval=2
-SnoozeDuration=5
-IdleThreshold=5
-```
-You can edit these numbers with any text editor (like Notepad) while O2om is closed.
+1. **Launch**: Double-click `O2om.exe`. Your work countdown starts automatically.
+2. **Pause / Resume**: Click **Pause** anytime to freeze the timer if you step away from your desk.
+3. **Break Prompt (`00:00`)**: Choose between **Tray Break**, **Fullscreen Exercises** (16:9 posture stretches), or **Snooze** (5 min delay).
+4. **Post-Break**: When the break finishes, click **"Start Work"** to begin your next session.
+5. **Settings & Language**: Switch seamlessly between **العربية** (with native Right-To-Left layout) and **English** from the Settings tab.
 
 ---
 
-## How to Compile to `.exe`
+## Want more custimization
 
-Compiling `O2om.ahk` into a standalone `.exe` allows you to share the application with anyone—even if they don't have AutoHotkey installed!
+### Prerequisites & Source Setup
 
-### Step 1: Download the AutoHotkey Compiler (Ahk2Exe)
-1. Open the [Official AutoHotkey Compiler Repository](https://github.com/AutoHotkey/Ahk2Exe) or install it via the AutoHotkey Dash:
-   - Press `Win Key`, type **AutoHotkey Dash**, and open it.
-   - Click on **Compile**. If Ahk2Exe is not installed, it will prompt you to install it automatically.
-2. Alternatively, download the latest zip release directly from [GitHub Ahk2Exe Releases](https://github.com/AutoHotkey/Ahk2Exe/releases).
+To run or modify O2om from source:
 
-### Step 2: Compiling O2om
-#### GUI Method:
-1. Launch **Ahk2Exe**.
-2. Set **Source (script file)** to `O2om.ahk`.
-3. Set **Destination (.exe file)** to `O2om.exe`.
-4. Set **Custom Icon (.ico file)** to `assets\o2om.ico`.
-5. Base File / Executable: Choose `AutoHotkey64.exe` (v2.0+).
-6. Click **Convert**.
+1. Windows OS (10 or 11).
+2. [AutoHotkey v2.0+](https://www.autohotkey.com/) installed.
+3. Double-click `O2om.ahk` to run from source.
 
-#### Command Line Method:
-If Ahk2Exe is added to your PATH or run directly:
-```cmd
-Ahk2Exe.exe /in "O2om.ahk" /out "O2om.exe" /icon "assets\o2om.ico" /base "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe"
+---
+
+### System Flowchart
+
+```mermaid
+flowchart TD
+    Start([Launch App / Boot]) --> Work[Active Work Session]
+    Work -->|Click Pause| Paused[Paused State]
+    Paused -->|Click Resume| Work
+    Work -->|Inactivity > Idle Threshold| Idle[User Away / Idle]
+    Idle -->|Physical Activity Detected| Work
+
+    Work -->|Timer Hits 00:00| BreakPrompt{Break Prompt}
+
+    BreakPrompt -->|Click Snooze| SnoozeDelay[Snooze 5 Min]
+    SnoozeDelay --> Work
+
+    BreakPrompt -->|Tray Only| QuietBreak[Active Break - Tray]
+    BreakPrompt -->|Fullscreen| StretchBreak[Active Break - Fullscreen Stretches]
+
+    QuietBreak -->|Timer Hits 00:00| WaitingWork[Waiting Work - Prompt]
+    StretchBreak -->|Timer Hits 00:00 / ESC / Start Work| WaitingWork
+
+    WaitingWork -->|Click Start Work| Work
 ```
 
-> [!NOTE]
-> `O2om.ahk` includes built-in Ahk2Exe compiler directives at the top of the file:
-> ```ahk
-> ;@Ahk2Exe-SetDescription O2om - Stand Up & Physical Health Reminder
-> ;@Ahk2Exe-SetVersion 0.6.1
-> ;@Ahk2Exe-SetName O2om
-> ;@Ahk2Exe-SetMainIcon assets\o2om.ico
-> ```
-> Ahk2Exe reads these metadata directives automatically during compilation.
-
 ---
 
-## Project Structure
+### Repository & Folder Structure
 
 ```text
 O2om/
-├── O2om.ahk          # Main AutoHotkey v2 source script
-├── O2om.exe          # Pre-compiled standalone executable
-├── o2om_config.ini   # Generated configuration settings file
-├── assets/
-│   └── o2om.ico      # App & System Tray icon
-└── README.md         # Documentation
+├── O2om.ahk                  # Main Entry Point & Orchestrator (O2omApp)
+├── O2om.exe                  # Standalone Compiled Executable
+├── o2om_config.ini           # User Settings Persistence File
+├── README.md                 # Complete Documentation
+├── assets/                   # Application Binary & Graphic Assets
+│   ├── o2om.ico              # Main Application & System Tray Icon
+│   └── exercises_bg.png      # 16:9 Clean 5-Panel Gesture Illustration
+├── lib/                      # Core Modular Codebase
+│   ├── TimerEngine.ahk       # State Machine & Countdown Math (O2omEngine)
+│   ├── Settings.ahk          # INI File Manager (O2omSettings)
+│   ├── Language.ahk          # Localization Dictionary (O2omLang)
+│   ├── Styles.ahk            # Design Tokens & Palette (O2omStyles)
+│   ├── Notifications.ahk     # Native Windows Toast & Sound (O2omNotify)
+│   ├── Tray.ahk               # System Tray Menu & Tooltip (O2omTray)
+│   ├── Startup.ahk            # Windows Autostart Registry Manager (O2omStartup)
+│   └── Gui/                  # Presentation Layer
+│       ├── Dashboard.ahk      # Main Timer View Controls (O2omDashboardView)
+│       └── SettingsView.ahk   # Configuration Form Controls (O2omSettingsView)
+└── .agents/                  # AI Agent Rules & Engineering Skills
+    ├── AGENTS.md             # Project Coding & Layout Invariants
+    └── skills/               # Reusable AutoHotkey v2 Patterns
+        └── autohotkey-v2-gui-patterns/SKILL.md
 ```
+
+#### Folder Structure Evaluation:
+
+- **Modular & Decoupled**: `lib/` cleanly separates business logic (`TimerEngine.ahk`), configuration (`Settings.ahk`), and infrastructure (`Tray.ahk`, `Notifications.ahk`) from presentation views (`lib/Gui/`).
+- **Multi-Language Architecture**: `Language.ahk` provides centralized dictionary lookups for Arabic and English.
+- **Resource Management**: Binary icons and graphics are isolated inside `assets/`.
+
+---
+
+### Critical Edge Cases & Engineering Invariants
+
+1. **Zero Text Redraw Flicker (`WS_CLIPCHILDREN`)**:
+   - All `Gui` initializations include `+0x02000000` (`WS_CLIPCHILDREN`) to eliminate text control flickering during 1-second updates.
+2. **Native Windows RTL Layout Mirroring (`WS_EX_LAYOUTRTL`)**:
+   - Arabic mode applies `+E0x400000` (`WS_EX_LAYOUTRTL`) to the main window for native control mirroring.
+3. **Visibility Ghosting Cleanup (`WinRedraw`)**:
+   - `ToggleDashboardButtons()` calls `WinRedraw("ahk_id " gui.Hwnd)` after toggling control visibility.
+4. **Destroyed Control Exception Guarding**:
+   - Control property updates in `UpdateDisplay()` are wrapped in `try` blocks to prevent crash race conditions.
+5. **32-Bit Tick Wraparound & Sleep/Wake Gap**:
+   - `TimerEngine.ahk` handles negative `delta` rollover (`delta += 0x100000000`) and sleep gaps (`SLEEP_GAP > 5000ms`).
+6. **Responsive Screen Scaling**:
+   - Exercise view dynamically calculates 16:9 image boundaries for 768p up to 4K displays.
+
+---
+
+### INI File Configuration (`o2om_config.ini`)
+
+Advanced users can edit `o2om_config.ini` directly while the app is closed:
+
+```ini
+[General]
+Language=ar
+
+[Timer]
+WorkInterval=40
+ShortBreak=5
+LongBreak=15
+EscalationInterval=2
+SnoozeDuration=5
+IdleThreshold=5
+CyclesBeforeLong=4
+```
+
+---
+
+### How to Compile to `.exe`
+
+Using **Ahk2Exe** (AutoHotkey Compiler)
+
+---
+
+## Part 3: AI Agent Integration (`.agents/`)
+
+This repository is equipped with an **AI Agent Context System** inside `.agents/`.
+
+When an AI coding assistant (such as **Google Antigravity / Gemini**) opens this codebase, it automatically loads:
+
+1. **[.agents/AGENTS.md](file:///b:/projects/personal/O2om/.agents/AGENTS.md)**: Workspace invariants (Arabic RTL `+E0x400000` rules, `WS_CLIPCHILDREN` `+0x02000000` zero-flicker mandates, `WinRedraw` ghosting cleanup, text-free exercise graphic constraints, and post-break window destruction flows).
+2. **[.agents/skills/autohotkey-v2-gui-patterns/SKILL.md](file:///b:/projects/personal/O2om/.agents/skills/autohotkey-v2-gui-patterns/SKILL.md)**: Reusable technical patterns for flicker-free AHK v2 GUI development.
 
 ---
 
 ## License & Copyright
 
-Copyright (c) 2026 O2om Team. Free to use, modify, and distribute for personal wellness.
+Copyright (c) 2026 O2om Team. Free for personal wellness and productivity.
+
+---
+
+> Its Never Too Late For **COFFEE**
