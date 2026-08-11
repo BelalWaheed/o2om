@@ -6,7 +6,7 @@
 
 ## Download O2om
 
-[**⬇️ Download Latest Executable (`O2om.exe`)**](O2om.exe)
+[**Download Latest Executable (O2om.exe)**](https://github.com/BelalWaheed/o2om/releases/latest/download/O2om.exe)
 
 _No installation required! Download `O2om.exe`, double-click to run, and it will sit quietly in your System Tray._
 
