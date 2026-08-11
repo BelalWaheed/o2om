@@ -1,0 +1,26 @@
+# O2om (قُوم) — Stand-Up Break Timer & Posture Health Reminder for Windows
+
+> O2om (derived from Arabic "قُوم", meaning "Stand up!") is an open-source, lightweight desktop health utility for Windows built with AutoHotkey v2. It monitors physical inactivity, auto-pauses when users step away from their desk, and prompts periodic posture stretch breaks with full Arabic (RTL) and English support.
+
+## Key Technical Specifications
+- Project Name: O2om (قُوم)
+- Target Platform: Windows 10 / Windows 11 (64-bit)
+- Language & Runtime: AutoHotkey v2.0+
+- Architecture: Non-blocking millisecond delta state engine (O2omEngine)
+- Localization: Native Arabic (Right-to-Left layout via WS_EX_LAYOUTRTL +E0x400000) & English
+- Visual Theme: Catppuccin Mocha Dark Palette
+- Display Support: Responsive 16:9 stretch graphic scaling from 768p to 4K
+- License: Open Source
+
+## Core Features
+1. Auto-Starting Work Timer: Session countdown starts automatically on launch or break completion.
+2. Pause & Resume Controls: Manual session pausing for unscheduled desk breaks.
+3. Fullscreen Desk Exercise Guidance: Guided 16:9 posture stretch illustrations (Neck Retraction, Shoulder Rolls, Seated Torso Twist, Standing Hamstring Stretch, Eye Relaxation 20-20-20).
+4. Physical Idle Detection: Auto-pauses work timer when physical input (mouse/keyboard) is inactive beyond configurable threshold via A_TimeIdlePhysical.
+5. Zero-Flicker GUI Rendering: Utilizes WS_CLIPCHILDREN (+0x02000000) to eliminate GDI text redraw flicker during 1-second ticks.
+6. Post-Break Workflow: Automatically closes fullscreen exercise overlay on break completion (00:00) and displays a manual "Start Work" button on the main dashboard.
+
+## Installation & Links
+- Download Executable: https://github.com/BelalWaheed/o2om/releases/latest/download/O2om.exe
+- Repository: https://github.com/BelalWaheed/o2om
+- License: Open Source
