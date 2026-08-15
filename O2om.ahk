@@ -1,5 +1,5 @@
 ;@Ahk2Exe-SetDescription O2om - Stand Up & Physical Health Reminder
-;@Ahk2Exe-SetVersion 1.0.0
+;@Ahk2Exe-SetVersion 2.5.3
 ;@Ahk2Exe-SetName O2om
 ;@Ahk2Exe-SetMainIcon assets\o2om.ico
 ;@Ahk2Exe-SetCopyright (c) 2026
@@ -126,7 +126,7 @@ class O2omApp {
         this.btnNavSet.OnEvent("Click", (*) => this.SwitchView(4))
 
         ; Accent Separator Line
-        g.AddProgress("x15 y50 w355 h2 Background" O2omStyles.COLOR_CARD, 0)
+        g.AddProgress("x15 y52 w355 h2 Background" O2omStyles.COLOR_CARD, 0)
 
         ; Build Views
         O2omDashboardView.Build(g, this, this.dashControls)
@@ -220,6 +220,8 @@ class O2omApp {
             this.ToggleDashboardButtons(mode)
             try this.gui.Show()
             try WinActivate("ahk_id " this.gui.Hwnd)
+            ; Ensure Windows resets mouse cursor from loading spinner to standard arrow
+            try DllCall("SetCursor", "Ptr", DllCall("LoadCursor", "Ptr", 0, "Int", 32512, "Ptr"))
         }
     }
 
@@ -284,6 +286,11 @@ class O2omApp {
         } else if (res.type == "escalation") {
             toastMsg := (res.stage == 1) ? O2omLang.Get("toast_break_stage2") : O2omLang.Get("toast_break_stage3")
             O2omNotify.Show(O2omLang.Get("toast_break_title"), toastMsg)
+        } else if (res.type == "auto_work_reset") {
+            ; Ignored both warnings and still in use -> dispatch final notification and resume work countdown
+            O2omNotify.Show(O2omLang.Get("toast_break_title"), O2omLang.Get("toast_break_stage3"))
+            this.ToggleDashboardButtons("normal")
+            this.SwitchView(1)
         } else if (res.type == "break_ended") {
             O2omNotify.Show(O2omLang.Get("toast_break_title"), O2omLang.Get("toast_break_ended"), 64)
             if (this.breakGui && IsObject(this.breakGui)) {

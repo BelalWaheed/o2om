@@ -16,6 +16,7 @@ _No installation required! Download `O2om.exe`, double-click to run, and it will
 
 | Attribute | Specification |
 | :--- | :--- |
+| **Version** | v2.5.3 |
 | **Category** | Desktop Health & Ergonomics Utility |
 | **Language & Framework** | AutoHotkey v2.0+ |
 | **Platform Support** | Windows 10 / Windows 11 (64-bit) |

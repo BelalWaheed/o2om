@@ -126,6 +126,24 @@ RunTests() {
     Assert.Equal("O2om — Stand-Up Reminder", O2omLang.Get("app_title"), "English app_title translation loaded")
     O2omLang.currentLang := "ar" ; restore default
 
+    ; Test 12: Escalation Cycle (Warning 1 -> Warning 2 -> Auto-reset)
+    engine.ResetToWork()
+    engine.isWaitingBreak := true
+    engine.reminderStage  := 0
+    engine.breakWaitStart := A_TickCount - (s.escalationMin * 60 * 1000 + 100)
+
+    ; Tick 1: Expect escalation stage 1
+    res1 := engine.Tick()
+    Assert.Equal("escalation", res1.type, "First ignored interval triggers stage 1 escalation")
+    Assert.Equal(1, res1.stage, "Escalation stage is 1")
+
+    ; Tick 2: Simulate second ignored interval -> Expect auto_work_reset if device is in active use
+    engine.breakWaitStart := A_TickCount - (s.escalationMin * 60 * 1000 + 100)
+    res2 := engine.Tick()
+    Assert.Equal("auto_work_reset", res2.type, "Second ignored warning triggers auto_work_reset when device is in use")
+    Assert.Equal(40 * 60 * 1000, engine.remaining, "Remaining time reset to full work duration after 2 ignored warnings")
+    Assert.True(!engine.isWaitingBreak, "isWaitingBreak cleared after auto_work_reset")
+
     Assert.Summary()
 }
 

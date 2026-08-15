@@ -4,6 +4,7 @@
 
 ## Key Technical Specifications
 - Project Name: O2om (قُوم)
+- Version: v2.5.3
 - Target Platform: Windows 10 / Windows 11 (64-bit)
 - Language & Runtime: AutoHotkey v2.0+
 - Architecture: Non-blocking millisecond delta state engine (O2omEngine)

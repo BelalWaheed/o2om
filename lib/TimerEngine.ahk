@@ -10,7 +10,7 @@ class O2omEngine {
     ; State
     remaining       := 0
     lastTick        := 0
-    reminderStage   := 0    ; 0 = Countdown, 1 = First Warning, 2 = Final Warning
+    reminderStage   := 0    ; 0 = Countdown, 1 = First Warning, 2 = Final Warning / Auto-Reset
     isIdle          := false
     isOnBreak       := false
     isWaitingBreak  := false
@@ -40,6 +40,7 @@ class O2omEngine {
         this.isWaitingBreak  := false
         this.isWaitingWork   := false
         this.isPaused        := false
+        this.breakWaitStart  := 0
         this.lastTick        := A_TickCount
     }
 
@@ -56,6 +57,8 @@ class O2omEngine {
         this.isWaitingBreak:= false
         this.isPaused      := false
         this.isIdle        := false
+        this.reminderStage := 0
+        this.breakWaitStart:= 0
         this.lastTick      := A_TickCount
     }
 
@@ -66,6 +69,7 @@ class O2omEngine {
         this.isPaused       := false
         this.isIdle         := false
         this.reminderStage  := 0
+        this.breakWaitStart := 0
         this.completedCycles += 1
 
         ; Determine if long break or short break
@@ -85,6 +89,7 @@ class O2omEngine {
         this.isWaitingBreak := false
         this.isWaitingWork  := false
         this.isPaused       := false
+        this.breakWaitStart := 0
         this.lastTick       := A_TickCount
     }
 
@@ -130,11 +135,25 @@ class O2omEngine {
         if (!this.isPaused && !this.isWaitingWork && !this.isWaitingBreak && this.remaining > 0)
             this.remaining -= delta
 
-        ; 4. Escalation Warning Check
+        ; 4. Escalation Warning & Auto-Reset Check
         if (this.isWaitingBreak) {
             if (this.breakWaitStart > 0 && (now - this.breakWaitStart) >= this.escalationMs) {
                 this.reminderStage++
                 this.breakWaitStart := now
+
+                ; If both warnings (stage 1 and stage 2) are ignored:
+                if (this.reminderStage >= 2) {
+                    if (idle < this.idleThresholdMs) {
+                        ; User is actively using device -> auto-start new work session
+                        this.ResetToWork()
+                        return { type: "auto_work_reset", stage: 2 }
+                    } else {
+                        ; User walked away from desk -> transition to idle
+                        this.isIdle := true
+                        return { type: "idle" }
+                    }
+                }
+
                 return { type: "escalation", stage: this.reminderStage }
             }
         }
@@ -149,6 +168,7 @@ class O2omEngine {
                 return { type: "break_ended" }
             } else if (!this.isWaitingBreak) {
                 this.isWaitingBreak := true
+                this.reminderStage  := 0
                 this.breakWaitStart := now
                 return { type: "waiting_break" }
             }

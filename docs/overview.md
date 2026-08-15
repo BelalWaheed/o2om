@@ -39,6 +39,7 @@ Prolonged seated computer use leads to reduced blood circulation, postural degra
 
 | Attribute | Specification |
 | :--- | :--- |
+| **Version** | v2.5.3 |
 | **Language / Framework** | AutoHotkey v2.0+ (Strict v2 syntax) |
 | **Target OS** | Windows 10 / Windows 11 (64-bit) |
 | **Architecture Pattern** | Decoupled State Engine + Modular View Controller |

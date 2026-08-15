@@ -1,6 +1,6 @@
 # O2om (قُوم) — Workflows & Runtime State Sequences
 
-This document outlines the state machine transitions, background tick lifecycle, break decision branches, and configuration update workflows for **O2om**.
+This document outlines the state machine transitions, background tick lifecycle, break decision branches, escalation warnings, and auto-reset workflows for **O2om**.
 
 ---
 
@@ -23,8 +23,11 @@ flowchart TD
     BreakPrompt -->|Click Snooze| SnoozeDelay[Snooze Countdown]
     SnoozeDelay -->|Snooze Hits 00:00| BreakPrompt
 
-    BreakPrompt -->|No Action & Escalation Timer Exceeded| EscalationWarning[Toast Escalation Stage 1 / 2]
-    EscalationWarning --> BreakPrompt
+    BreakPrompt -->|Ignored 1st Warning Interval| Warning1[Toast Warning 1: Break Time Passed]
+    Warning1 --> BreakPrompt
+
+    BreakPrompt -->|Ignored 2nd Warning & Device in Use| AutoReset[Toast Final: Auto-Reset Work Timer]
+    AutoReset --> Work
 
     BreakPrompt -->|Click Start Break| TrayBreak[Break Active - Tray Only]
     BreakPrompt -->|Click Start Exercises| ExerciseBreak[Break Active - 16:9 Fullscreen Guide]
@@ -65,10 +68,14 @@ sequenceDiagram
     else Countdown Reaches 00:00 (Work ended)
         Engine-->>App: { type: "waiting_break" }
         App->>GUI: Switch to Dashboard & Display Break Buttons
-        App->>Toast: Dispatch "Break Time" Notification
-    else Break Prompt Ignored (now - breakWaitStart >= escalationMs)
-        Engine-->>App: { type: "escalation", stage: N }
-        App->>Toast: Dispatch Warning Notification
+        App->>Toast: Dispatch Initial "Break Time" Notification
+    else Ignored Warning 1 (delta >= escalationMs, stage 1)
+        Engine-->>App: { type: "escalation", stage: 1 }
+        App->>Toast: Dispatch Warning 1 Toast
+    else Ignored Warning 2 & Device in Use (stage >= 2, idle < idleThresholdMs)
+        Engine-->>App: { type: "auto_work_reset", stage: 2 }
+        App->>Toast: Dispatch "Final Warning: Auto-Reset" Notification
+        App->>GUI: Reset Dashboard to Normal Work Mode
     else Break Reaches 00:00 (Break ended)
         Engine-->>App: { type: "break_ended" }
         App->>GUI: Destroy breakGui & Show "Start Work" Button
@@ -91,13 +98,13 @@ sequenceDiagram
 4. Once `idle >= idleThresholdMs`, the engine enters `isIdle` mode, suspending countdown deduction.
 5. As soon as the user returns (hardware input detected, `idle < idleThresholdMs`), the engine resets to a fresh work interval.
 
-### B. Break Trigger & Escalation Workflow
+### B. Break Trigger & Escalation Workflow (Two Warnings + Auto-Reset)
 1. When work timer reaches `00:00`, the engine transitions into `isWaitingBreak`.
-2. The main window pops to the front, displaying three prominent choices:
-   - **Start Break (Tray Only)**: Starts countdown quietly in tray without blocking the display.
-   - **Start Exercises (Fullscreen)**: Opens a dedicated 16:9 illustration displaying posture exercises.
-   - **Snooze**: Postpones the break for `snoozeMin` minutes.
-3. If the prompt is ignored, the engine checks `now - breakWaitStart >= escalationMs` and dispatches escalating warnings (`stage 1` and `stage 2`).
+2. The main window pops to the front, and the initial break notification is dispatched (`toast_break_stage1`).
+3. If no action is taken after `escalationMs` (e.g. 2 minutes), Warning 1 is dispatched (`toast_break_stage2`).
+4. If still ignored after a second `escalationMs` interval:
+   - If the user is actively using the computer (`idle < idleThresholdMs`), the final notification (`toast_break_stage3`) is dispatched and the engine **automatically starts a new work countdown**.
+   - If the user stepped away from the desk (`idle >= idleThresholdMs`), the engine transitions cleanly to idle mode.
 
 ### C. Post-Break Workflow (Clean Resumption)
 1. When the break countdown expires (`00:00`), the fullscreen exercise overlay is completely destroyed (`breakGui.Destroy()`).
