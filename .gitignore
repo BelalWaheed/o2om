@@ -1,2 +1,4 @@
 /target
 o2om_config.ini
+tests/test_results.txt
+error_log.txt
