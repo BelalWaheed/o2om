@@ -52,12 +52,19 @@ class O2omEngine {
 
     StartWork() {
         this.isWaitingWork := false
+        this.isOnBreak     := false
+        this.isWaitingBreak:= false
+        this.isPaused      := false
+        this.isIdle        := false
         this.lastTick      := A_TickCount
     }
 
     StartBreak() {
         this.isOnBreak      := true
         this.isWaitingBreak := false
+        this.isWaitingWork  := false
+        this.isPaused       := false
+        this.isIdle         := false
         this.reminderStage  := 0
         this.completedCycles += 1
 
@@ -74,7 +81,10 @@ class O2omEngine {
         this.remaining      := this.snoozeMs
         this.reminderStage  := 0
         this.isIdle         := false
+        this.isOnBreak      := false
         this.isWaitingBreak := false
+        this.isWaitingWork  := false
+        this.isPaused       := false
         this.lastTick       := A_TickCount
     }
 
@@ -91,29 +101,36 @@ class O2omEngine {
 
         ; 1. Sleep/Wake gap check
         if (delta > O2omEngine.SLEEP_GAP) {
-            if (idle >= this.idleThresholdMs) {
+            if (idle >= this.idleThresholdMs && !this.isOnBreak) {
                 this.ResetToWork()
             }
             return { type: "normal" }
         }
 
-        ; 2. Idle State Handling
-        if (this.isIdle) {
-            if (idle < this.idleThresholdMs) {
-                this.ResetToWork()
-            }
-            return { type: "idle" }
-        }
+        ; 2. Idle State Handling (Enforced strictly during active work sessions)
+        isActiveWorkSession := (!this.isOnBreak && !this.isWaitingBreak && !this.isWaitingWork && !this.isPaused)
 
-        if (idle >= this.idleThresholdMs) {
-            this.isIdle := true
-            return { type: "idle" }
+        if (isActiveWorkSession) {
+            if (this.isIdle) {
+                if (idle < this.idleThresholdMs) {
+                    this.ResetToWork()
+                }
+                return { type: "idle" }
+            }
+
+            if (idle >= this.idleThresholdMs) {
+                this.isIdle := true
+                return { type: "idle" }
+            }
+        } else {
+            this.isIdle := false
         }
 
         ; 3. Normal Countdown
         if (!this.isPaused && !this.isWaitingWork && !this.isWaitingBreak && this.remaining > 0)
             this.remaining -= delta
 
+        ; 4. Escalation Warning Check
         if (this.isWaitingBreak) {
             if (this.breakWaitStart > 0 && (now - this.breakWaitStart) >= this.escalationMs) {
                 this.reminderStage++
@@ -122,6 +139,7 @@ class O2omEngine {
             }
         }
 
+        ; 5. Expiry Transitions
         if (this.remaining <= 0 && !this.isWaitingWork) {
             if (this.isOnBreak) {
                 ; Break finished, transition to waiting work state

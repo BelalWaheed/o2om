@@ -58,10 +58,10 @@ class O2omDashboardView {
         controlsList.Push(btnSnooze)
 
         ; Auto-start Checkbox (At y306)
-        isStartup := O2omStartup.IsEnabled()
+        isStartup := (appInstance.settings.startWithWindows == 1)
         chkStart := g.AddCheckbox("x43 y306 w300 h24 c" O2omStyles.COLOR_TEXT " " (isStartup ? "Checked" : ""), O2omLang.Get("chk_startup"))
         chkStart.SetFont("s9", O2omStyles.FONT_PRIMARY)
-        chkStart.OnEvent("Click", (ctrl, *) => O2omStartup.SetEnabled(ctrl.Value))
+        chkStart.OnEvent("Click", (ctrl, *) => appInstance.OnStartupToggle(ctrl.Value))
         appInstance.startupCheck := chkStart
         controlsList.Push(chkStart)
     }

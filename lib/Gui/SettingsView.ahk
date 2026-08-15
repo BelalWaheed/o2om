@@ -5,14 +5,6 @@
 class O2omSettingsView {
     static Build(g, appInstance, controlsList) {
         s := appInstance.settings
-        isRTL := (O2omLang.currentLang == "ar")
-        textAlign := isRTL ? "Right" : "Left"
-
-        ; Dynamic X Coordinates for clean LTR vs RTL layout
-        lblX   := isRTL ? 165 : 20
-        lblW   := 155
-        inputX := isRTL ? 20 : 185
-        inputW := 135
 
         ; Language Dropdown (r2 ensures dropdown items render properly)
         lblLang := g.AddText("x25 y58 w220 h24 c" O2omStyles.COLOR_TEXT, O2omLang.Get("lbl_language"))

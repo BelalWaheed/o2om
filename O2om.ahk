@@ -8,11 +8,31 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 Persistent
+SetWorkingDir(A_ScriptDir)
+
+; ---------------------------------------------------------------------------
+; Global Error Handler (Prevents crashes and logs errors safely)
+; ---------------------------------------------------------------------------
+OnError(GlobalErrorHandler)
+
+GlobalErrorHandler(thrown, mode) {
+    logPath := A_AppData "\O2om\error_log.txt"
+    try DirCreate(A_AppData "\O2om")
+    try FileAppend(Format("[{1}] ERROR in {2} (Line {3}): {4}`n", 
+        FormatTime(, "yyyy-MM-dd HH:mm:ss"), 
+        thrown.File, 
+        thrown.Line, 
+        thrown.Message), logPath, "UTF-8")
+    
+    MsgBox("An unexpected error occurred in O2om:`n`n" . thrown.Message . "`n`nLogged to: " . logPath, "O2om Application Error", "Iconx 16")
+    return true
+}
 
 ; ---------------------------------------------------------------------------
 ; O2om (قُوم) — Stand-Up & Physical Health Reminder
 ; ---------------------------------------------------------------------------
 
+#Include lib/Resources.ahk
 #Include lib/Styles.ahk
 #Include lib/Language.ahk
 #Include lib/Startup.ahk
@@ -31,7 +51,8 @@ class O2omApp {
     activeView := 1  ; 1 = Timer, 4 = Settings
 
     ; GUI Navigation Buttons
-    btnNavDash   := ""
+    btnNavDash       := ""
+    btnNavSet        := ""
     btnStartWork     := ""
     btnStartExercises:= ""
     btnStartBreak    := ""
@@ -44,34 +65,33 @@ class O2omApp {
     breakCt          := ""
 
     ; Control Handles
-    countdownText := ""
-    statusText    := ""
-    startupCheck  := ""
-    ddlLanguage   := ""
-    ; Bound Handlers
-    fnWmActivate     := ""
+    countdownText    := ""
+    statusText       := ""
+    startupCheck     := ""
+    ddlLanguage      := ""
 
     ; Settings Inputs
-    editWork       := ""
-    editShortBreak := ""
-    editLongBreak  := ""
-    editEscalation := ""
-    editSnooze     := ""
-    editIdle       := ""
+    editWork         := ""
+    editShortBreak   := ""
+    editLongBreak    := ""
+    editEscalation   := ""
+    editSnooze       := ""
+    editIdle         := ""
 
     ; Control Collections
     dashControls     := []
     settingsControls := []
 
     __New() {
-        O2omStartup.EnsureDefault()
-        O2omNotify.RegisterAUMID()
+        O2omResources.Init()
 
         this.settings := O2omSettings()
         this.settings.Load()
 
+        O2omStartup.SyncWithSettings(this.settings.startWithWindows)
+        O2omNotify.RegisterAUMID()
+
         this.engine := O2omEngine(this.settings)
-        this.fnWmActivate := ObjBindMethod(this, "OnWmActivate")
 
         O2omTray.Setup(this)
         this.SetupGui()
@@ -82,7 +102,7 @@ class O2omApp {
     }
 
     SetupGui() {
-        if (this.gui)
+        if (this.gui && IsObject(this.gui))
             try this.gui.Destroy()
 
         this.dashControls      := []
@@ -96,7 +116,7 @@ class O2omApp {
         g := Gui(guiOpts, O2omLang.Get("app_title"))
         g.BackColor := O2omStyles.COLOR_BG
 
-        ; 2 Top Navigation Tabs (Centered perfectly: x82 and x197)
+        ; 2 Top Navigation Tabs (Centered: x82 and x197)
         this.btnNavDash := g.AddButton("x82 y14 w105 h32", O2omLang.Get("tab_timer"))
         this.btnNavDash.SetFont("s9 Bold", O2omStyles.FONT_PRIMARY)
         this.btnNavDash.OnEvent("Click", (*) => this.SwitchView(1))
@@ -117,18 +137,18 @@ class O2omApp {
 
         this.gui := g
 
-        this.SetupBreakGui()
-
         this.SwitchView(this.activeView)
-        mode := this.engine.isWaitingBreak ? "wait_break" : "normal"
+        mode := this.engine.isWaitingWork ? "wait_work" : (this.engine.isWaitingBreak ? "wait_break" : "normal")
         this.ToggleDashboardButtons(mode)
         
         g.Show("w385 h" O2omStyles.WIN_HEIGHT " Hide")
     }
 
     SetupBreakGui() {
-        if (this.breakGui)
+        if (this.breakGui && IsObject(this.breakGui)) {
             try this.breakGui.Destroy()
+            this.breakGui := ""
+        }
 
         bg := Gui("-Caption +0x02000000", O2omLang.Get("app_title"))
         bg.BackColor := O2omStyles.COLOR_BG
@@ -145,21 +165,20 @@ class O2omApp {
         btnEnd.SetFont("s12 Bold", O2omStyles.FONT_PRIMARY)
         btnEnd.OnEvent("Click", (*) => this.StartWorkMode())
 
-        ; Responsive Screen Scaling for 16:9 o2om-exercises.png (No text overlays)
-        maxImgH := A_ScreenHeight - 140
-        maxImgW := A_ScreenWidth - 40
-        imgW := Min(maxImgW, Integer(maxImgH * 16 / 9))
-        imgH := Integer(imgW * 9 / 16)
+        ; Responsive Screen Scaling for 16:9 illustration (Clean, text-free)
+        imgPath := O2omResources.GetExerciseImage()
+        if (imgPath != "") {
+            maxImgH := A_ScreenHeight - 140
+            maxImgW := A_ScreenWidth - 40
+            imgW := Min(maxImgW, Integer(maxImgH * 16 / 9))
+            imgH := Integer(imgW * 9 / 16)
 
-        ix := (A_ScreenWidth - imgW) / 2
-        iy := (A_ScreenHeight - 80 - imgH) / 2
-        bg.AddPicture("x" ix " y" iy " w" imgW " h" imgH, A_ScriptDir "\assets\exercises_bg.png")
+            ix := (A_ScreenWidth - imgW) / 2
+            iy := (A_ScreenHeight - 80 - imgH) / 2
+            try bg.AddPicture("x" ix " y" iy " w" imgW " h" imgH, imgPath)
+        }
 
         this.breakGui := bg
-    }
-
-    OnWmActivate(wParam, lParam, msg, hwnd) {
-        ; Auto-hide removed as requested by user
     }
 
     SwitchView(viewNum) {
@@ -168,8 +187,10 @@ class O2omApp {
 
         this.activeView := viewNum
 
-        this.btnNavDash.SetFont(viewNum == 1 ? "s9 Bold" : "s9 norm")
-        this.btnNavSet.SetFont(viewNum == 4 ? "s9 Bold" : "s9 norm")
+        if IsObject(this.btnNavDash)
+            this.btnNavDash.SetFont(viewNum == 1 ? "s9 Bold" : "s9 norm")
+        if IsObject(this.btnNavSet)
+            this.btnNavSet.SetFont(viewNum == 4 ? "s9 Bold" : "s9 norm")
 
         for ctrl in this.dashControls {
             ; Don't blindly make Action buttons visible, preserve their specific state
@@ -188,10 +209,13 @@ class O2omApp {
 
         for ctrl in this.settingsControls
             ctrl.Visible := (viewNum == 4)
+
+        if (this.gui && this.gui.Hwnd)
+            try WinRedraw("ahk_id " this.gui.Hwnd)
     }
 
     ShowGui() {
-        if (this.gui) {
+        if (this.gui && IsObject(this.gui)) {
             mode := this.engine.isWaitingWork ? "wait_work" : (this.engine.isWaitingBreak ? "wait_break" : "normal")
             this.ToggleDashboardButtons(mode)
             try this.gui.Show()
@@ -199,23 +223,34 @@ class O2omApp {
         }
     }
 
+    OnStartupToggle(val) {
+        this.settings.startWithWindows := val
+        this.settings.Save()
+        O2omStartup.SetEnabled(val)
+    }
 
+    SafeInt(val, defaultVal := 1, minVal := 1) {
+        valStr := Trim(String(val))
+        if (!IsInteger(valStr))
+            return 0
+        intVal := Integer(valStr)
+        return (intVal < minVal) ? 0 : intVal
+    }
 
     ApplySettingsFromGui() {
-        workVal       := Integer(this.editWork.Value)
-        shortVal      := Integer(this.editShortBreak.Value)
-        longVal       := Integer(this.editLongBreak.Value)
-        escalationVal := Integer(this.editEscalation.Value)
-        snoozeVal     := Integer(this.editSnooze.Value)
-        idleVal       := Integer(this.editIdle.Value)
+        workVal       := this.SafeInt(this.editWork.Value)
+        shortVal      := this.SafeInt(this.editShortBreak.Value)
+        longVal       := this.SafeInt(this.editLongBreak.Value)
+        escalationVal := this.SafeInt(this.editEscalation.Value)
+        snoozeVal     := this.SafeInt(this.editSnooze.Value)
+        idleVal       := this.SafeInt(this.editIdle.Value)
 
         if (workVal <= 0 || shortVal <= 0 || longVal <= 0 || escalationVal <= 0 || snoozeVal <= 0 || idleVal <= 0) {
             MsgBox(O2omLang.Get("msg_invalid_input"), O2omLang.Get("app_title"), "Icon!")
             return
         }
 
-        oldLang := this.settings.language
-        selectedLang := (this.ddlLanguage.Text == "English") ? "en" : "ar"
+        selectedLang := (this.ddlLanguage.Value == 2) ? "en" : "ar"
         
         this.settings.language         := selectedLang
         O2omLang.currentLang           := selectedLang
@@ -251,7 +286,7 @@ class O2omApp {
             O2omNotify.Show(O2omLang.Get("toast_break_title"), toastMsg)
         } else if (res.type == "break_ended") {
             O2omNotify.Show(O2omLang.Get("toast_break_title"), O2omLang.Get("toast_break_ended"), 64)
-            if (this.breakGui) {
+            if (this.breakGui && IsObject(this.breakGui)) {
                 try this.breakGui.Destroy()
                 this.breakGui := ""
             }
@@ -297,36 +332,45 @@ class O2omApp {
 
     StartWorkMode() {
         this.engine.StartWork()
-        if (this.breakGui) {
+        if (this.breakGui && IsObject(this.breakGui)) {
             try this.breakGui.Destroy()
             this.breakGui := ""
         }
         this.ToggleDashboardButtons("normal")
         this.SwitchView(1)
         this.UpdateDisplay()
+        this.ShowGui()
     }
 
     StartBreakMode(showExercises) {
         this.engine.StartBreak()
-        this.gui.Hide()
+        if (this.gui && IsObject(this.gui))
+            this.gui.Hide()
         this.ToggleDashboardButtons("normal")
         if (showExercises) {
             this.SetupBreakGui()
-            this.breakGui.Show("w" A_ScreenWidth " h" A_ScreenHeight)
+            if (this.breakGui && IsObject(this.breakGui))
+                this.breakGui.Show("x0 y0 w" A_ScreenWidth " h" A_ScreenHeight)
         }
     }
 
     ResetTimer() {
+        if (this.breakGui && IsObject(this.breakGui)) {
+            try this.breakGui.Destroy()
+            this.breakGui := ""
+        }
         this.ToggleDashboardButtons("normal")
-        this.breakGui.Hide()
         this.engine.ResetToWork()
         this.SwitchView(1)
         this.UpdateDisplay()
     }
 
     SnoozeTimer() {
+        if (this.breakGui && IsObject(this.breakGui)) {
+            try this.breakGui.Destroy()
+            this.breakGui := ""
+        }
         this.ToggleDashboardButtons("normal")
-        this.breakGui.Hide()
         this.engine.Snooze()
         this.SwitchView(1)
         this.UpdateDisplay()
