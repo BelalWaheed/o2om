@@ -92,6 +92,12 @@ O2om/
 ├── assets/                   # Application Binary & Graphic Assets
 │   ├── o2om.ico              # Main Application & System Tray Icon
 │   └── exercises_bg.png      # 16:9 Clean 5-Panel Gesture Illustration
+├── docs/                     # Living Technical Documentation
+│   ├── overview.md           # Product vision, features, and specs
+│   ├── architecture.md       # Layered system architecture & invariants
+│   ├── workflows.md          # State machine flows & sequence diagrams
+│   └── adr/                  # Architecture Decision Records
+│       └── 0001-autohotkey-v2-architecture.md
 ├── lib/                      # Core Modular Codebase
 │   ├── TimerEngine.ahk       # State Machine & Countdown Math (O2omEngine)
 │   ├── Settings.ahk          # INI File Manager (O2omSettings)
@@ -109,10 +115,12 @@ O2om/
         └── autohotkey-v2-gui-patterns/SKILL.md
 ```
 
-#### Architecture Evaluation:
-- **Modular & Decoupled**: `lib/` cleanly separates business logic (`TimerEngine.ahk`), configuration (`Settings.ahk`), and infrastructure (`Tray.ahk`, `Notifications.ahk`) from presentation views (`lib/Gui/`).
-- **Multi-Language Architecture**: `Language.ahk` provides centralized dictionary lookups for Arabic and English.
-- **Resource Management**: Binary icons and graphics are isolated inside `assets/`.
+#### Architecture Documentation:
+For comprehensive technical documentation, refer to the [`docs/`](docs/) directory:
+- [**Product Overview & Vision**](docs/overview.md)
+- [**System Architecture & Invariants**](docs/architecture.md)
+- [**State Machine & Sequence Workflows**](docs/workflows.md)
+- [**ADR 0001: AutoHotkey v2 Architecture**](docs/adr/0001-autohotkey-v2-architecture.md)
 
 ---
 
