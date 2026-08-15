@@ -31,9 +31,9 @@ class O2omNotify {
         ; Clear any active tray tip before displaying new one to ensure clean pop-up
         try TrayTip()
 
-        ; Native TrayTip / Toast dispatch (1 = Info icon, renders as Action Center toast)
+        ; Native TrayTip / Toast dispatch without the big blue (i) icon circle
         try {
-            TrayTip(message, title, 1)
+            TrayTip(message, title, "Mute")
         } catch {
             ; Fallback
         }

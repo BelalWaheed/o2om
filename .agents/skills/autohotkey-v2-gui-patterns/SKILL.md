@@ -43,12 +43,12 @@ When distributing standalone compiled `.exe` files, direct relative asset paths 
   }
   ```
 
-## 5. Reliable Windows Action Center Toast Notifications
-Windows 10/11 may drop balloon tips if an older tooltip is active or if option `0` is passed.
-- **Fix**: Call `try TrayTip()` to clear previous toasts, and pass option `1` (Info icon):
+## 5. Clean Windows Action Center Toast Notifications (Without Blue Icon)
+Windows 10/11 draws a large blue standard `(i)` circle icon if option `1` is passed.
+- **Fix**: Call `try TrayTip()` to clear previous toasts, and pass `"Mute"` to render a clean toast without the blue icon or duplicate beep:
   ```autohotkey
   try TrayTip()
-  try TrayTip(message, title, 1)
+  try TrayTip(message, title, "Mute")
   ```
 
 ## 6. Exception Guarding & Defensive Parsing
