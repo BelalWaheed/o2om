@@ -4,9 +4,10 @@
 
 class O2omTray {
     static Setup(appInstance) {
-        iconPath := A_ScriptDir "\assets\o2om.ico"
-        if FileExist(iconPath)
-            TraySetIcon(iconPath)
+        iconPath := O2omResources.GetIcon()
+        if (iconPath != "") {
+            try TraySetIcon(iconPath)
+        }
 
         tray := A_TrayMenu
         tray.Delete()
@@ -21,6 +22,8 @@ class O2omTray {
     }
 
     static UpdateTooltip(timeStr) {
-        A_IconTip := O2omLang.Get("app_title") " — " timeStr
+        try {
+            A_IconTip := O2omLang.Get("app_title") " — " timeStr
+        }
     }
 }

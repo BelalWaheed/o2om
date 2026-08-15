@@ -14,16 +14,19 @@ class O2omStartup {
 
     static SetEnabled(enable) {
         if (enable) {
-            exePath := A_IsCompiled ? A_ScriptFullPath : ('"' A_AhkPath '" "' A_ScriptFullPath '"')
-            RegWrite(exePath, "REG_SZ", this.REG_KEY, this.REG_VALUE)
+            exePath := A_IsCompiled ? ('"' A_ScriptFullPath '"') : ('"' A_AhkPath '" "' A_ScriptFullPath '"')
+            try RegWrite(exePath, "REG_SZ", this.REG_KEY, this.REG_VALUE)
         } else {
             try RegDelete(this.REG_KEY, this.REG_VALUE)
         }
     }
 
-    static EnsureDefault() {
-        if !this.IsEnabled() {
+    static SyncWithSettings(shouldBeEnabled) {
+        current := this.IsEnabled()
+        if (shouldBeEnabled && !current) {
             this.SetEnabled(true)
+        } else if (!shouldBeEnabled && current) {
+            this.SetEnabled(false)
         }
     }
 }

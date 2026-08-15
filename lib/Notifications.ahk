@@ -12,8 +12,8 @@ class O2omNotify {
         regPath := "HKCU\Software\Classes\AppUserModelId\" this.AUMID
         try {
             RegWrite(this.APP_NAME, "REG_SZ", regPath, "DisplayName")
-            iconPath := A_ScriptDir "\assets\o2om.ico"
-            if FileExist(iconPath)
+            iconPath := O2omResources.GetIcon()
+            if (iconPath != "")
                 RegWrite(iconPath, "REG_SZ", regPath, "IconUri")
         }
     }
